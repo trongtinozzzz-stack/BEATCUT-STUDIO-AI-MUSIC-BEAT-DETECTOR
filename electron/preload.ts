@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
   openAudioFile: () => ipcRenderer.invoke('dialog:openAudioFile'),
   analyzeAudio: (filePath: string) => ipcRenderer.invoke('audio:analyze', filePath),
+  analyzeAudioBuffer: (fileName: string, buffer: ArrayBuffer) =>
+    ipcRenderer.invoke('audio:analyzeBuffer', { fileName, buffer: new Uint8Array(buffer) }),
   cancelAnalysis: () => ipcRenderer.invoke('audio:cancelAnalysis'),
   saveProject: (project: any) => ipcRenderer.invoke('project:save', project),
   openProject: () => ipcRenderer.invoke('project:open'),

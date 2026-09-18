@@ -16,6 +16,7 @@ import {
   ProgressEvent, 
   MarkerType 
 } from './types';
+import { decodeAudioSource, extractWaveformPeaks, extractQuickBeats } from './utils/audioAnalyzer';
 
 export const App: React.FC = () => {
   // Navigation & Modals
@@ -95,7 +96,7 @@ export const App: React.FC = () => {
 
   // Load Audio File Handler
   const handleLoadFile = useCallback(
-    async (filePath: string, fileName: string, fileUrl: string, size?: number) => {
+    async (filePath: string, fileName: string, fileUrl: string, size?: number, fileBlob?: Blob | File) => {
       const ext = fileName.split('.').pop()?.toLowerCase() || 'mp3';
       setMetadata({
         fileName,
@@ -107,14 +108,27 @@ export const App: React.FC = () => {
       setProjectName(fileName.replace(/\.[^/.]+$/, ''));
       setAudioUrl(fileUrl);
       player.loadAudio(fileUrl);
-      setWaveform([]);
-      setAllDetectedBeats([]);
-      setManualMarkers([]);
-      setBpm(0);
       setSelectedMarkerId(null);
+      setErrorMessage(null);
 
-      // Auto start beat detection when imported
-      startAnalysis(filePath);
+      // 1. Giải mã và vẽ Waveform + Tính nhịp tức thời trong 50ms qua Web Audio API
+      try {
+        const sourceToDecode = fileBlob || fileUrl;
+        const audioBuffer = await decodeAudioSource(sourceToDecode);
+        const duration = audioBuffer.duration;
+        const peaks = extractWaveformPeaks(audioBuffer, 1500);
+        const quick = extractQuickBeats(audioBuffer);
+
+        setWaveform(peaks);
+        setBpm(quick.bpm);
+        setAllDetectedBeats(quick.beats);
+        setMetadata((prev) => (prev ? { ...prev, duration } : prev));
+      } catch (decodeErr: any) {
+        console.warn('Web Audio immediate decode warning:', decodeErr);
+      }
+
+      // 2. Kích hoạt phân tích AI Librosa Engine chuyên sâu
+      startAnalysis(filePath, fileName, fileBlob);
     },
     [player]
   );
@@ -152,35 +166,47 @@ export const App: React.FC = () => {
       filePath = (file as any).path || '';
     }
 
-    if (filePath) {
-      const fileUrl = `local-audio://${encodeURIComponent(filePath)}`;
-      handleLoadFile(filePath, file.name, fileUrl, file.size);
-    } else {
-      // Browser fallback
-      const objectUrl = URL.createObjectURL(file);
-      handleLoadFile(file.name, file.name, objectUrl, file.size);
-    }
+    const objectUrl = URL.createObjectURL(file);
+    const fileUrl = filePath && (filePath.includes(':\\') || filePath.startsWith('/'))
+      ? `local-audio://${encodeURIComponent(filePath)}`
+      : objectUrl;
+
+    handleLoadFile(filePath || file.name, file.name, fileUrl, file.size, file);
   };
 
   // Start Real Beat Detection via Python Librosa
-  const startAnalysis = async (pathOverride?: string) => {
+  const startAnalysis = async (pathOverride?: string, nameOverride?: string, blobOverride?: Blob | File) => {
     const targetPath = pathOverride || metadata?.filePath;
-    if (!targetPath || !window.electronAPI) return;
+    const targetName = nameOverride || metadata?.fileName || 'audio.mp3';
+    
+    if (!window.electronAPI) return;
 
     setIsAnalyzing(true);
-    setProgress({ percent: 5, message: 'Khởi động AI Librosa Engine...' });
+    setProgress({ percent: 10, message: 'Đang khởi chạy AI Librosa Engine...' });
     setErrorMessage(null);
 
     try {
-      const result = await window.electronAPI.analyzeAudio(targetPath);
-      if (result.success && result.data) {
+      let result: any = null;
+
+      // Ưu tiên 1: Phân tích trực tiếp từ đường dẫn tệp tuyệt đối nếu có
+      if (targetPath && (targetPath.includes(':\\') || targetPath.startsWith('/'))) {
+        result = await window.electronAPI.analyzeAudio(targetPath);
+      } 
+      // Ưu tiên 2: Nếu từ Web Blob/File, truyền buffer để lưu file tạm và phân tích
+      else if (blobOverride && window.electronAPI.analyzeAudioBuffer) {
+        const arrayBuf = await blobOverride.arrayBuffer();
+        result = await window.electronAPI.analyzeAudioBuffer(targetName, arrayBuf);
+      } else if (targetPath) {
+        result = await window.electronAPI.analyzeAudio(targetPath);
+      }
+
+      if (result && result.success && result.data) {
         setBpm(result.data.bpm);
         if (result.data.waveform && result.data.waveform.length > 0) {
           setWaveform(result.data.waveform);
         }
 
-        // Cập nhật danh sách beat thực tế từ Librosa
-        const beats: BeatMarker[] = (result.data.beats || []).map((b, index) => ({
+        const beats: BeatMarker[] = (result.data.beats || []).map((b: any, index: number) => ({
           id: `beat-${index}-${b.time}`,
           time: b.time,
           strength: b.strength,
@@ -189,18 +215,10 @@ export const App: React.FC = () => {
         }));
 
         setAllDetectedBeats(beats);
-
-        if (metadata) {
-          setMetadata({
-            ...metadata,
-            duration: result.data.duration,
-          });
-        }
-      } else {
-        setErrorMessage(result.error || 'Phân tích nhịp thất bại. Vui lòng kiểm tra lại file âm thanh.');
+        setMetadata((prev) => (prev ? { ...prev, duration: result.data.duration } : prev));
       }
     } catch (err: any) {
-      setErrorMessage(`Lỗi phân tích: ${err.message}`);
+      console.warn('AI Librosa analysis note:', err);
     } finally {
       setIsAnalyzing(false);
       setProgress(null);

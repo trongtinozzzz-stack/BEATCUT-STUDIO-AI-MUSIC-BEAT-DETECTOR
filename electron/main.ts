@@ -250,8 +250,8 @@ ipcMain.handle('engine:check', async () => {
   });
 });
 
-// IPC Handler: Phân tích Beat với Librosa
-ipcMain.handle('audio:analyze', async (_event, filePath: string) => {
+// Hàm phân tích file âm thanh nội bộ qua Python Librosa
+async function analyzeAudioInternal(filePath: string): Promise<any> {
   if (!fs.existsSync(filePath)) {
     return {
       success: false,
@@ -345,6 +345,27 @@ ipcMain.handle('audio:analyze', async (_event, filePath: string) => {
       });
     }
   });
+}
+
+// IPC Handler: Phân tích Beat với Librosa theo đường dẫn
+ipcMain.handle('audio:analyze', async (_event, filePath: string) => {
+  return analyzeAudioInternal(filePath);
+});
+
+// IPC Handler: Phân tích file từ ArrayBuffer (dành cho Web Drop hoặc HTML input)
+ipcMain.handle('audio:analyzeBuffer', async (_event, { fileName, buffer }: { fileName: string; buffer: Uint8Array }) => {
+  try {
+    const tempDir = app.getPath('temp');
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const tempPath = path.join(tempDir, `beatcut_${Date.now()}_${safeName}`);
+    fs.writeFileSync(tempPath, Buffer.from(buffer));
+    return analyzeAudioInternal(tempPath);
+  } catch (err: any) {
+    return {
+      success: false,
+      error: `Lỗi ghi file tạm để phân tích: ${err.message}`,
+    };
+  }
 });
 
 // IPC Handler: Hủy phân tích

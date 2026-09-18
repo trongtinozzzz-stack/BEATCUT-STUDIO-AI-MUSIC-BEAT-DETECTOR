@@ -66,6 +66,7 @@ declare global {
     electronAPI?: {
       openAudioFile: () => Promise<{ canceled: boolean; filePath?: string; fileName?: string; fileUrl?: string; duration?: number; size?: number }>;
       analyzeAudio: (filePath: string) => Promise<{ success: boolean; data?: AnalysisResult; error?: string; details?: string }>;
+      analyzeAudioBuffer?: (fileName: string, buffer: ArrayBuffer) => Promise<{ success: boolean; data?: AnalysisResult; error?: string; details?: string }>;
       cancelAnalysis: () => Promise<void>;
       saveProject: (project: ProjectData) => Promise<{ success: boolean; filePath?: string; error?: string }>;
       openProject: () => Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }>;
