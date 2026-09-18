@@ -4,7 +4,7 @@ node_modules/
 .pnp.js
 
 # Build Outputs
-dist/
+# dist/ is committed for cloud static hosting
 dist-electron/
 release/
 out/
