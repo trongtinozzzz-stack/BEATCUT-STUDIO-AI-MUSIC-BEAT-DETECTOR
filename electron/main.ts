@@ -199,6 +199,18 @@ ipcMain.handle('dialog:openAudioFile', async () => {
   };
 });
 
+// IPC Handler: Khởi động lại hoặc tải lại app
+ipcMain.handle('app:restart', () => {
+  app.relaunch();
+  app.exit(0);
+});
+
+ipcMain.handle('app:reload', () => {
+  if (mainWindow) {
+    mainWindow.reload();
+  }
+});
+
 // IPC Handler: Kiểm tra môi trường Audio Engine (Python & Librosa)
 ipcMain.handle('engine:check', async () => {
   const pythonBin = getPythonExecutable();

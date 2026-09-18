@@ -14,7 +14,7 @@ import {
 import { AudioMetadata, BeatMarker } from '../types';
 import { formatTime, formatFileSize } from '../utils/time';
 
-export type SidebarTab = 'audio' | 'detection' | 'markers' | 'export' | 'settings';
+export type SidebarTab = 'audio' | 'detection' | 'segments' | 'markers' | 'export' | 'settings';
 
 interface SidebarProps {
   activeTab: SidebarTab;
@@ -42,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems: { id: SidebarTab; label: string; icon: React.ReactNode }[] = [
     { id: 'audio', label: 'Âm thanh', icon: <FileAudio className="w-4 h-4" /> },
     { id: 'detection', label: 'Tách nhịp AI', icon: <Activity className="w-4 h-4" /> },
+    { id: 'segments', label: 'Đoạn cắt & Giây', icon: <Sliders className="w-4 h-4 text-amber-400" /> },
     { id: 'markers', label: 'Markers', icon: <Bookmark className="w-4 h-4" /> },
     { id: 'export', label: 'Xuất file', icon: <FileText className="w-4 h-4" /> },
     { id: 'settings', label: 'Cài đặt', icon: <Settings2 className="w-4 h-4" /> },

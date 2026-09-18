@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Music, 
   FolderOpen, 
@@ -8,7 +7,9 @@ import {
   Upload, 
   Activity, 
   CheckCircle2, 
-  AlertTriangle 
+  AlertTriangle,
+  Scissors,
+  RotateCw
 } from 'lucide-react';
 import { EngineStatus, ProgressEvent } from '../types';
 
@@ -16,8 +17,10 @@ interface TopBarProps {
   onImportAudio: () => void;
   onOpenProject: () => void;
   onSaveProject: () => void;
+  onOpenSegments: () => void;
   onOpenExport: () => void;
   onOpenSettings: () => void;
+  onRestartApp?: () => void;
   engineStatus: EngineStatus | null;
   isAnalyzing: boolean;
   progress: ProgressEvent | null;
@@ -29,14 +32,26 @@ export const TopBar: React.FC<TopBarProps> = ({
   onImportAudio,
   onOpenProject,
   onSaveProject,
+  onOpenSegments,
   onOpenExport,
   onOpenSettings,
+  onRestartApp,
   engineStatus,
   isAnalyzing,
   progress,
   hasAudio,
   projectName,
 }) => {
+  const handleReload = () => {
+    if (onRestartApp) {
+      onRestartApp();
+    } else if (window.electronAPI?.reloadApp) {
+      window.electronAPI.reloadApp();
+    } else {
+      window.location.reload();
+    }
+  };
+
   return (
     <header className="h-14 bg-studio-card border-b border-studio-border px-4 flex items-center justify-between select-none z-30">
       {/* Brand & Project Name */}
@@ -112,16 +127,36 @@ export const TopBar: React.FC<TopBarProps> = ({
         </button>
 
         <button
+          onClick={onOpenSegments}
+          disabled={!hasAudio}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 disabled:opacity-40 disabled:pointer-events-none text-amber-300 hover:text-amber-200 border border-amber-500/40 rounded-lg text-xs font-medium transition shadow-sm"
+          title="Xem dãy ngắt đoạn 0-10, 10-12s và danh sách giây từng chấm"
+        >
+          <Scissors className="w-3.5 h-3.5 text-amber-400" />
+          <span>Dãy ngắt đoạn</span>
+        </button>
+
+        <button
           onClick={onOpenExport}
           disabled={!hasAudio}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-studio-surface hover:bg-studio-hover disabled:opacity-40 disabled:pointer-events-none text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-medium transition"
-          title="Xuất dữ liệu timestamp (JSON, CSV, TXT)"
+          title="Xuất dữ liệu timestamp (CapCut, Premiere, CSV, JSON)"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Xuất dữ liệu</span>
         </button>
 
         <div className="h-4 w-px bg-studio-border mx-1" />
+
+        {/* Nút Khởi động lại / Tải lại app */}
+        <button
+          onClick={handleReload}
+          className="flex items-center gap-1 px-2.5 py-1.5 text-slate-300 hover:text-cyan-300 hover:bg-blue-600/20 border border-studio-border hover:border-cyan-500/40 rounded-lg text-xs font-medium transition"
+          title="Tải lại ứng dụng / Cập nhật mã nguồn mới nhất"
+        >
+          <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Tải lại app</span>
+        </button>
 
         <button
           onClick={onOpenSettings}

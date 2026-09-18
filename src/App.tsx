@@ -7,6 +7,7 @@ import { BottomPlayer } from './components/BottomPlayer';
 import { MarkerManagerModal } from './components/MarkerManagerModal';
 import { ExportModal } from './components/ExportModal';
 import { SettingsModal } from './components/SettingsModal';
+import { CutSegmentsModal } from './components/CutSegmentsModal';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { 
   AudioMetadata, 
@@ -24,6 +25,7 @@ export const App: React.FC = () => {
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [isMarkersOpen, setIsMarkersOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isSegmentsOpen, setIsSegmentsOpen] = useState<boolean>(false);
 
   // Audio & Project Data
   const [projectName, setProjectName] = useState<string>('Dự án Beat 1');
@@ -387,6 +389,7 @@ export const App: React.FC = () => {
         onImportAudio={handleImportAudio}
         onOpenProject={handleOpenProject}
         onSaveProject={handleSaveProject}
+        onOpenSegments={() => setIsSegmentsOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         engineStatus={engineStatus}
@@ -403,6 +406,7 @@ export const App: React.FC = () => {
           activeTab={activeTab}
           onSelectTab={(tab) => {
             setActiveTab(tab);
+            if (tab === 'segments') setIsSegmentsOpen(true);
             if (tab === 'markers') setIsMarkersOpen(true);
             if (tab === 'export') setIsExportOpen(true);
             if (tab === 'settings') setIsSettingsOpen(true);
@@ -473,6 +477,17 @@ export const App: React.FC = () => {
       />
 
       {/* Modals */}
+      <CutSegmentsModal
+        isOpen={isSegmentsOpen}
+        onClose={() => setIsSegmentsOpen(false)}
+        markers={activeMarkers}
+        totalDuration={metadata?.duration || player.duration || 0}
+        onSeekAndPlay={(startTime) => {
+          player.seek(startTime);
+          player.play();
+        }}
+      />
+
       <MarkerManagerModal
         isOpen={isMarkersOpen}
         onClose={() => setIsMarkersOpen(false)}

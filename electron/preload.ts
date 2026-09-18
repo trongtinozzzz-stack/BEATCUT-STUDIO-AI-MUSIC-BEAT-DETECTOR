@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportData: (format: string, content: string, defaultName: string) =>
     ipcRenderer.invoke('data:export', { format, content, defaultName }),
   checkEngine: () => ipcRenderer.invoke('engine:check'),
+  restartApp: () => ipcRenderer.invoke('app:restart'),
+  reloadApp: () => ipcRenderer.invoke('app:reload'),
   getPathForFile: (file: File) => {
     try {
       if (webUtils && typeof webUtils.getPathForFile === 'function') {

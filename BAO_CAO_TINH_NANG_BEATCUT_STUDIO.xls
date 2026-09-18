@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Title>BÁO CÁO TOÀN BỘ TÍNH NĂNG ỨNG DỤNG BEATCUT STUDIO</Title>
+  <Author>BEATCUT STUDIO DEV TEAM</Author>
+  <Created>2026-09-18T20:15:00Z</Created>
+  <Company>BEATCUT STUDIO</Company>
+ </DocumentProperties>
+ <Styles>
+  <!-- Style mặc định -->
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Borders/>
+   <Font ss:FontName="Segoe UI" x:Family="Swiss" ss:Size="10" ss:Color="#1E293B"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <!-- Tiêu đề lớn -->
+  <Style ss:ID="HeaderTitle">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="16" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#0F172A" ss:Pattern="Solid"/>
+  </Style>
+  <!-- Subtitle -->
+  <Style ss:ID="HeaderSubtitle">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Segoe UI" ss:Size="11" ss:Italic="1" ss:Color="#94A3B8"/>
+   <Interior ss:Color="#1E293B" ss:Pattern="Solid"/>
+  </Style>
+  <!-- Header bảng -->
+  <Style ss:ID="TableHeader">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0284C7"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#334155"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#334155"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#334155"/>
+   </Borders>
+   <Font ss:FontName="Segoe UI" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#0369A1" ss:Pattern="Solid"/>
+  </Style>
+  <!-- Nhóm tính năng -->
+  <Style ss:ID="CategoryRow">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>
+   </Borders>
+   <Font ss:FontName="Segoe UI" ss:Size="11" ss:Bold="1" ss:Color="#0369A1"/>
+   <Interior ss:Color="#E0F2FE" ss:Pattern="Solid"/>
+  </Style>
+  <!-- Hàng dữ liệu chuẩn -->
+  <Style ss:ID="DataRow">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+   </Borders>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Color="#334155"/>
+  </Style>
+  <!-- Hàng dữ liệu canh giữa (STT, Trạng thái, Phím tắt) -->
+  <Style ss:ID="DataRowCenter">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+   </Borders>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Color="#334155"/>
+  </Style>
+  <!-- Badge Hoàn thành -->
+  <Style ss:ID="BadgeDone">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+   </Borders>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#15803D"/>
+   <Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/>
+  </Style>
+  <!-- Badge Phím tắt -->
+  <Style ss:ID="BadgeHotkey">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+   </Borders>
+   <Font ss:FontName="Consolas" ss:Size="10" ss:Bold="1" ss:Color="#4338CA"/>
+   <Interior ss:Color="#EEF2FF" ss:Pattern="Solid"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Danh Sách Tính Năng">
+  <Table ss:ExpandedColumnCount="6" x:FullColumns="1" x:FullRows="1" ss:DefaultRowHeight="24">
+   <Column ss:Width="45"/>
+   <Column ss:Width="200"/>
+   <Column ss:Width="320"/>
+   <Column ss:Width="250"/>
+   <Column ss:Width="110"/>
+   <Column ss:Width="110"/>
+
+   <!-- Tiêu đề lớn -->
+   <Row ss:Height="36">
+    <Cell ss:MergeAcross="5" ss:StyleID="HeaderTitle">
+     <Data ss:Type="String">BÁO CÁO DANH MỤC CHỨC NĂNG HỆ THỐNG BEATCUT STUDIO</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:MergeAcross="5" ss:StyleID="HeaderSubtitle">
+     <Data ss:Type="String">Phần mềm Tách nhịp AI, Dựng Beat Timeline &amp; Xuất dữ liệu tự động cho Video Editors</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="10"/>
+
+   <!-- Header bảng -->
+   <Row ss:Height="28">
+    <Cell ss:StyleID="TableHeader"><Data ss:Type="String">STT</Data></Cell>
+    <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Tên Tính Năng</Data></Cell>
+    <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Mô Tả Chi Tiết &amp; Nghiệp Vụ</Data></Cell>
+    <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Giá Trị Ứng Dụng Thực Tế</Data></Cell>
+    <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Phím Tắt / Thao Tác</Data></Cell>
+    <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Trạng Thái</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 1 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">I. NHẬP LIỆU &amp; QUẢN LÝ DỰ ÁN ÂM THANH (AUDIO INGESTION)</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="32">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thêm file nhạc đa định dạng</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Hỗ trợ mở các tệp MP3, WAV, FLAC, M4A, OGG với trình chọn tệp chuẩn Windows.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Đọc trực tiếp tất cả định dạng bài hát phổ biến.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Nút [Thêm nhạc]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="32">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Kéo thả tập tin (Drag &amp; Drop)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Cho phép kéo thả trực tiếp file nhạc từ File Explorer Windows vào cửa sổ ứng dụng.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thao tác siêu tốc, tiện lợi như phần mềm chuyên nghiệp.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Kéo &amp; Thả chuột</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="32">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Lưu &amp; Mở Dự Án (.beatcut)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Lưu toàn bộ tiến trình làm việc (markers, zoom, tempo, tên file) vào file dự án để mở lại bất kỳ lúc nào.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Không sợ mất dữ liệu khi đang chỉnh sửa dở dang.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Nút [Mở] / [Lưu]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="32">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Bảng thông số tệp âm thanh</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tự động trích xuất: Thời lượng (mm:ss), Định dạng file (MP3/WAV), Dung lượng tệp (MB), Tổng số điểm nhịp.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nắm bắt thông số bài hát chuẩn xác để lên kịch bản video.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Tự động hiển thị</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 2 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">II. CÔNG NGHỆ AI &amp; AUDIO DSP BEAT DETECTION</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Web Audio DSP Engine Siêu Tốc</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Bộ phân tích nội bộ bằng thuật toán Autocorrelation + Kick/Bass Envelope, quét xong toàn bộ bài hát trong 0.1s mà không cần cài phụ thuộc.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Bắt nhịp ngay lập tức, không có độ trễ, cực kỳ nhẹ máy.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Nút [Tách nhịp AI]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Đo BPM (Tempo) Tự Động</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tự động tính toán nhịp độ BPM thực tế của bài hát qua biến thiên tần số thấp (65 - 180 BPM).</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Hỗ trợ DJ, Beatmaker, Editor biết chính xác tốc độ bài nhạc.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Tự động nhận diện</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Phân cấp Nhịp Mạnh &amp; Nhịp Nhẹ (4/4 Meter)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tự động khóa pha khuôn nhạc: Nhịp mạnh (Downbeat - đầu mỗi 4 phách) và Nhịp nhẹ (Quarter notes 2, 3, 4) và Upbeats.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Cắt chuyển cảnh chuẩn từng cú đập trống và đổi đoạn.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Phân loại tự động</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Librosa Spectral Audio Engine (Nâng cao)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Hỗ trợ tích hợp Python Librosa để phân tích Onset Envelope và Spectrogram chuyên sâu trong tiến trình nền độc lập.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Đáp ứng các nhu cầu xử lý âm thanh nghiên cứu chuyên sâu.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Bảng Cài đặt Engine</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 3 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">III. GIAO DIỆN TIMELINE SÓNG ÂM &amp; TƯƠNG TÁC CANVAS (WAVEFORM &amp; TIMELINE)</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">9</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Waveform Sóng Âm Render Canvas</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Dạng sóng âm gradient xanh dương nổi bật, tối ưu nén 1.500 đỉnh đồ họa đạt 60fps mượt mà kể cả trên máy yếu.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nhìn trực quan biên độ âm thanh to/nhỏ để đặt điểm cắt.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Canvas Hardware-Acc</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thu phóng Timeline linh hoạt (Zoom 1x - 16x)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thanh trượt và nút Zoom In / Zoom Out / Reset Zoom giúp phóng to chi tiết từng miligiây hoặc xem toàn bài.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Chỉnh sửa chính xác từng mili-giây như trên CapCut/Premiere.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Slider Zoom &amp; Nút bấm</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Vạch Playhead &amp; Thước đo thời gian</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thước đo thời gian hiển thị nhãn chuẩn (00:00, 00:10, 00:20...) kèm vạch phát màu trắng sáng di chuyển mượt theo nhạc.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Theo dõi bài hát chính xác đến từng khung hình.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Tự động trượt</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Hover Tooltip &amp; Chọn Marker</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Rê chuột vào vạch nhịp sẽ hiện khung thông tin (Loại nhịp, Timestamp, Confidence), click để chọn làm việc.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Dễ dàng kiểm tra và quản lý từng điểm nhịp.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Hover &amp; Click chuột</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 4 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">IV. BỘ LỌC, ĐIỀU CHỈNH MẬT ĐỘ &amp; QUẢN LÝ MARKER</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thanh điều chỉnh Mật độ tách nhịp (Beat Density)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thanh trượt LOW - MEDIUM - HIGH cho phép tăng giảm số lượng điểm cắt từ ít (chỉ nhịp mạnh) đến chi tiết từng phách.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tùy biến video theo phong cách: cắt chậm chill hoặc giật nhanh bắt trend.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Slider Mật độ nhịp</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút Ẩn/Hiện Nhịp Mạnh (🔴)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút bấm tương tác trực tiếp ở thanh dưới giúp ẩn hoặc hiện riêng các vạch nhịp mạnh (Downbeats màu đỏ cam).</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tập trung quan sát và chỉnh sửa riêng từng lớp nhịp.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Click nút [🔴 Nhịp mạnh]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút Ẩn/Hiện Nhịp Nhẹ / Chuẩn (🟡)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút bấm tương tác trực tiếp ở thanh dưới giúp ẩn hoặc hiện riêng các vạch nhịp chuẩn màu vàng.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tùy biến hiển thị theo nhu cầu dựng video.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Click nút [🟡 Nhịp chuẩn]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút Ẩn/Hiện Marker Thủ Công (🟣)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút bấm tương tác trực tiếp ở thanh dưới giúp ẩn hoặc hiện các điểm đánh dấu thủ công bạn tự tạo.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Phân tách rõ ràng giữa nhịp AI quét và điểm tự thêm bằng tay.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Click nút [🟣 Marker thủ công]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút Ẩn Hết / Hiện Tất Cả (👁️)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nút Master Toggle giúp tắt sạch toàn bộ vạch nhịp trên sóng âm để quan sát sóng âm thông thoáng hoặc bật lại chỉ với 1 click.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Kiểm tra trực quan dạng sóng gốc dễ dàng.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Click nút [Ẩn hết / Hiện tất cả]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thêm Marker thủ công</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Cho phép người dùng đánh dấu điểm cắt riêng biệt tại bất kỳ vị trí con trỏ đang phát bằng phím tắt hoặc nút bấm.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tự do chấm các điểm rơi hiệu ứng đặc biệt trong video.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Phím [M] hoặc nút [+ Thêm]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Xóa Marker nhanh</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Chọn marker bất kỳ trên timeline và bấm phím xóa để loại bỏ điểm nhịp không mong muốn.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Làm sạch danh sách nhịp chuẩn xác nhất.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Phím [Delete] / [Backspace]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 5 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">V. TRÌNH PHÁT NHẠC &amp; NGHE THỬ TRỰC TIẾP (AUDIO PLAYER &amp; CONTROLS)</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Phát / Tạm dừng đồng bộ</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Phát nhạc với HTML5 Audio Engine độ trễ cực thấp, con trỏ chạy mượt mà trên timeline.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nghe kiểm tra nhịp rơi chuẩn xác theo thời gian thực.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Phím [Space] / Nút Play</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">21</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tua nhanh / lùi nhanh 5 giây</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tua nhanh bài hát bằng nút điều khiển hoặc phím mũi tên bàn phím.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Di chuyển nhanh giữa các đoạn verse/chorus của bài hát.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Phím [←] / [→]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Điều chỉnh tốc độ phát (Speed Control)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Hỗ trợ các mức tốc độ: 0.5x, 0.75x, 1x (chuẩn), 1.25x, 1.5x, 2x.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Làm chậm để soi kỹ từng mili-giây nhịp nhanh phức tạp.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Menu Tốc độ phát</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">23</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Điều chỉnh Âm Lượng &amp; Mute</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thanh trượt âm lượng mượt mà (0% - 100%) kèm nút bấm tắt tiếng (Mute) tiện lợi.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Bảo vệ tai và tùy chỉnh mức âm lượng làm việc phù hợp.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Slider &amp; Icon Âm lượng</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 6 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">VI. XUẤT DỮ LIỆU &amp; TÍCH HỢP PHẦN MỀM DỰNG VIDEO (EXPORT &amp; WORKFLOW)</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">24</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Xuất kịch bản CapCut (.json)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Đóng gói dữ liệu Beat Marker theo chuẩn template CapCut Draft JSON để import trực tiếp vào CapCut.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tự động hóa hoàn toàn khâu bắt beat giật giật trên CapCut.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Modal [Xuất dữ liệu]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Xuất Adobe Premiere Pro / Final Cut (.csv / .edl)</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Xuất file CSV chứa Timecode chuẩn SMPTE (HH:MM:SS:FF) tương thích 100% với Adobe Premiere Pro, DaVinci Resolve và After Effects.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Tạo hàng trăm markers trên timeline Premiere chỉ với 1 click.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Modal [Xuất dữ liệu]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">26</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Xuất dữ liệu thô Raw JSON</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Xuất file JSON chứa toàn bộ mảng timestamp (giây), loại nhịp (strong/standard/manual), độ tin cậy và thông số BPM.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Hỗ trợ các lập trình viên, nhà phát triển game và AI pipeline.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Modal [Xuất dữ liệu]</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+
+   <!-- NHÓM 7 -->
+   <Row ss:Height="26">
+    <Cell ss:MergeAcross="5" ss:StyleID="CategoryRow">
+     <Data ss:Type="String">VII. TRẢI NGHIỆM DESKTOP NATIVE &amp; HỆ THỐNG (SYSTEM &amp; PACKAGING)</Data>
+    </Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">27</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Ứng dụng Windows Desktop Native</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Chạy độc lập mượt mà trên Windows với icon chuyên nghiệp, file thực thi .exe và phím tắt Desktop.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Khởi động nhanh, không cần mạng internet khi xử lý bài hát.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Desktop Shortcut</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+   <Row ss:Height="36">
+    <Cell ss:StyleID="DataRowCenter"><Data ss:Type="Number">28</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Giao diện Studio Dark Pro UI</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Thiết kế phong cách phòng thu hiện đại, màu sắc tương phản cao, dịu mắt khi làm việc ban đêm trong nhiều giờ.</Data></Cell>
+    <Cell ss:StyleID="DataRow"><Data ss:Type="String">Nâng tầm trải nghiệm thị giác chuyên nghiệp như DAW cao cấp.</Data></Cell>
+    <Cell ss:StyleID="BadgeHotkey"><Data ss:Type="String">Giao diện Dark Mode</Data></Cell>
+    <Cell ss:StyleID="BadgeDone"><Data ss:Type="String">✅ Hoạt động tốt</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape"/>
+   </PageSetup>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>3</ActiveRow>
+     <ActiveCol>1</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>
