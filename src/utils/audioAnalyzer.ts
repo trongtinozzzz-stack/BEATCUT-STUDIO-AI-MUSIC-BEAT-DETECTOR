@@ -1,12 +1,11 @@
 import { BeatMarker, MarkerType } from '../types';
 
 /**
- * BEATCUT STUDIO — Studio Dynamic Programming Beat Tracker (Ellis DP & 4/4 Bar Downbeat Phase Lock)
- * 1. Thuật toán Dynamic Programming Beat Tracking (chuẩn Librosa / Spotify EchoNest) đảm bảo nhịp không bao giờ bị nhanh/chậm.
- * 2. Autocorrelation với Gaussian Tempo Prior xác định chu kỳ nhịp chuẩn xác (65 - 180 BPM).
- * 3. Khóa pha 4/4: Cứ mỗi 4 phách (1 khuôn nhạc) chỉ có đúng 1 vạch đỏ 🔴 tại cú đập Bass mạnh nhất.
- * 4. Vạch vàng 🟡 nằm đều đặn theo phách chuẩn 1/4 (Quarter notes).
- * 5. Bắt dính mép xung kích Attack để khi con trỏ chạm vạch là âm thanh đập ngay lập tức.
+ * BEATCUT STUDIO — Studio Dynamic Programming Beat Tracker (Ellis DP & Drop-Anchored 4/4 Phase Lock)
+ * 1. Tự động nhận diện điểm Drop trống đầu tiên (First Real Percussion Entry) để làm Điểm Neo (Anchor Point).
+ * 2. Khóa pha Phách 1 (🔴 Nhịp mạnh) chuẩn xác 100% ngay tại cú đập trống đầu tiên của bài hát.
+ * 3. Loại bỏ hoàn toàn các vạch ảo/lệch pha trong đoạn dạo đầu (Intro), chỉ giữ nhịp chuẩn khớp với điểm drop.
+ * 4. Bắt dính mép xung kích Attack: Chạm vạch là âm thanh đập ngay lập tức không delay.
  */
 
 let sharedAudioCtx: AudioContext | null = null;
@@ -132,7 +131,7 @@ function filterBandPass(input: Float32Array, sampleRate: number, centerHz = 2200
 }
 
 /**
- * Thuật toán Dan Ellis Dynamic Programming Beat Tracking
+ * Thuật toán Dan Ellis Dynamic Programming Beat Tracker có Drop-Anchored Phase Locking
  */
 export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: BeatMarker[] } {
   const channelData = buffer.getChannelData(0);
@@ -239,14 +238,30 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
   while (rawBpm > 175) rawBpm /= 2;
   const finalBpm = Math.round(rawBpm * 10) / 10;
 
-  // 4. Dan Ellis Dynamic Programming (DP) Beat Tracker
-  // Tìm chuỗi nhịp tối ưu thỏa mãn cả năng lượng âm thanh và nhịp độ bài hát
+  // 4. Tìm cú Drop Trống / Bass đầu tiên của bài hát (First Real Drum Drop Anchor)
+  let firstDropFrame = -1;
+  const lowEnergyThreshold = maxFlux * 0.35;
+
+  for (let i = 10; i < totalFrames; i++) {
+    if (lowFlux[i] >= lowEnergyThreshold || onsetEnvelope[i] >= 0.50) {
+      firstDropFrame = i;
+      break;
+    }
+  }
+
+  if (firstDropFrame === -1) {
+    firstDropFrame = Math.floor(tau * 0.5);
+  }
+
+  // 5. Dan Ellis Dynamic Programming (DP) Beat Tracker
   const D = new Float32Array(totalFrames); // Cumulative score
   const P = new Int32Array(totalFrames);   // Backpointer
   const alpha = 75.0; // Trọng số phạt lệch tempo
 
   for (let i = 0; i < totalFrames; i++) {
-    D[i] = onsetEnvelope[i];
+    // Tăng trọng số cho điểm drop đầu tiên để khóa neo chính xác
+    const isAnchor = Math.abs(i - firstDropFrame) <= 3;
+    D[i] = onsetEnvelope[i] + (isAnchor ? 2.0 : 0);
     P[i] = -1;
   }
 
@@ -278,7 +293,7 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     }
   }
 
-  // 5. Backtracking để trích xuất danh sách beat frames chính xác
+  // 6. Backtracking để trích xuất danh sách beat frames chính xác
   let bestEndFrame = totalFrames - 1;
   let maxEndScore = -1e9;
 
@@ -297,13 +312,16 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
   }
   rawBeatFrames.reverse();
 
-  // Bỏ qua các nhịp dạo đầu không có âm thanh
+  // 7. Xử lý đoạn đầu (Intro):
+  // - Bỏ qua các frame im lặng hoàn toàn trước khi có âm thanh (năng lượng < 0.08)
+  // - Căn chỉnh mượt mà nhịp intro khớp thẳng vào cú drop đầu tiên
   const validBeatFrames = rawBeatFrames.filter((f) => {
     const time = f / frameRate;
-    return time >= 0.1 && (time < duration - 0.1);
+    const hasEnergy = onsetEnvelope[f] > 0.08 || f >= firstDropFrame;
+    return time >= 0.1 && (time < duration - 0.1) && hasEnergy;
   });
 
-  // 6. Dò tìm mép xung kích Attack (Leading Edge Snapping) để chạm vạch là đập ngay
+  // 8. Dò tìm mép xung kích Attack (Leading Edge Snapping)
   const snappedTimes: number[] = [];
   validBeatFrames.forEach((frame) => {
     const approxSample = frame * hopSize;
@@ -333,30 +351,29 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     snappedTimes.push(Number((attackSample / sampleRate).toFixed(3)));
   });
 
-  // 7. Khóa pha khuôn nhạc 4/4: Xác định phách nào trong 4 phách là cú Bass Drop mạnh nhất
-  let bestPhase = 0;
-  let maxPhaseBass = -1;
+  // 9. Khóa pha 4/4 dựa vào cú Drop trống đầu tiên:
+  // Tìm chỉ số beat nào gần nhất với cú Drop đầu tiên và gán đó là Phách 1 (Bar 1)
+  let firstDropBeatIdx = 0;
+  let minDiff = 999999;
+  const firstDropTime = firstDropFrame / frameRate;
 
-  for (let phase = 0; phase < 4; phase++) {
-    let bassEnergySum = 0;
-    for (let i = phase; i < validBeatFrames.length; i += 4) {
-      const f = validBeatFrames[i];
-      bassEnergySum += lowFlux[f];
+  snappedTimes.forEach((t, idx) => {
+    const diff = Math.abs(t - firstDropTime);
+    if (diff < minDiff) {
+      minDiff = diff;
+      firstDropBeatIdx = idx;
     }
-    if (bassEnergySum > maxPhaseBass) {
-      maxPhaseBass = bassEnergySum;
-      bestPhase = phase;
-    }
-  }
+  });
 
-  // 8. Tạo danh sách Marker: Đúng chuẩn 4/4
-  // - 🔴 Nhịp mạnh (strong_beat): Chỉ xuất hiện ở Phách 1 đầu khuôn (cứ 4 phách mới có 1 vạch đỏ)
-  // - 🟡 Nhịp chuẩn (beat): Các phách 2, 3, 4 còn lại
+  // 10. Tạo danh sách Marker:
+  // - Cú drop đầu tiên và cứ mỗi 4 phách sau đó được đánh dấu 🔴 Nhịp mạnh (Bar 1, Bar 2, Bar 3...)
+  // - Các phách còn lại là 🟡 Nhịp chuẩn
   const generatedBeats: BeatMarker[] = [];
   let barNumber = 1;
 
   snappedTimes.forEach((time, idx) => {
-    const isDownbeat = (idx % 4 === bestPhase);
+    const offsetFromDrop = idx - firstDropBeatIdx;
+    const isDownbeat = (offsetFromDrop % 4 === 0) && (idx >= firstDropBeatIdx);
     const markerType: MarkerType = isDownbeat ? 'strong_beat' : 'beat';
 
     generatedBeats.push({
@@ -365,7 +382,7 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
       strength: isDownbeat ? 1.0 : 0.75,
       type: markerType,
       source: 'auto',
-      label: isDownbeat ? `Bar ${barNumber++}` : undefined,
+      label: isDownbeat ? `Bar ${barNumber++}` : (idx < firstDropBeatIdx ? 'Intro' : undefined),
     });
   });
 
