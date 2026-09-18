@@ -2,12 +2,25 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
 const DIST_DIR = path.join(__dirname, 'dist');
+
+// Auto-build if dist folder or index.html is missing
+const indexHtmlPath = path.join(DIST_DIR, 'index.html');
+if (!fs.existsSync(indexHtmlPath)) {
+  console.log('[BeatCut Server] dist/index.html not found! Running "npm run build"...');
+  try {
+    execSync('npm run build', { stdio: 'inherit', cwd: __dirname });
+    console.log('[BeatCut Server] Build completed successfully.');
+  } catch (err) {
+    console.error('[BeatCut Server] Auto-build error:', err);
+  }
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -28,7 +41,6 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  // CORS & Security Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
 
@@ -45,7 +57,7 @@ const server = http.createServer((req, res) => {
 
   let filePath = path.join(DIST_DIR, reqPath);
 
-  // SPA Fallback: Nếu không tìm thấy file, fallback về index.html
+  // SPA Fallback: Nếu không tìm thấy file hoặc là thư mục, fallback về index.html
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     filePath = path.join(DIST_DIR, 'index.html');
   }
@@ -53,14 +65,13 @@ const server = http.createServer((req, res) => {
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('404 Not Found');
+      res.end('404 Not Found - dist/index.html missing. Please check build logs.');
       return;
     }
 
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    // Cache static assets
     if (ext !== '.html') {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
@@ -78,3 +89,4 @@ server.listen(PORT, () => {
   console.log(`  URL: http://localhost:${PORT}`);
   console.log(`========================================================`);
 });
+
