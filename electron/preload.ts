@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   openAudioFile: () => ipcRenderer.invoke('dialog:openAudioFile'),
@@ -9,6 +9,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportData: (format: string, content: string, defaultName: string) =>
     ipcRenderer.invoke('data:export', { format, content, defaultName }),
   checkEngine: () => ipcRenderer.invoke('engine:check'),
+  getPathForFile: (file: File) => {
+    try {
+      if (webUtils && typeof webUtils.getPathForFile === 'function') {
+        return webUtils.getPathForFile(file);
+      }
+    } catch {
+      // ignore
+    }
+    return (file as any).path || '';
+  },
   onProgress: (callback: (progress: any) => void) => {
     const handler = (_event: any, data: any) => callback(data);
     ipcRenderer.on('audio:progress', handler);

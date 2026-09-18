@@ -119,22 +119,39 @@ export const App: React.FC = () => {
     [player]
   );
 
-  // Import Audio via Native Dialog
+  // Import Audio via Native Dialog or HTML5 File Picker
   const handleImportAudio = async () => {
-    if (!window.electronAPI) return;
-    try {
-      const res = await window.electronAPI.openAudioFile();
-      if (!res.canceled && res.filePath && res.fileName && res.fileUrl) {
-        handleLoadFile(res.filePath, res.fileName, res.fileUrl, res.size);
+    if (window.electronAPI && typeof window.electronAPI.openAudioFile === 'function') {
+      try {
+        const res = await window.electronAPI.openAudioFile();
+        if (!res.canceled && res.filePath && res.fileName && res.fileUrl) {
+          handleLoadFile(res.filePath, res.fileName, res.fileUrl, res.size);
+          return;
+        }
+        if (res.canceled) return;
+      } catch (err: any) {
+        console.warn('Native open audio file dialog failed, falling back to input:', err);
       }
-    } catch (err: any) {
-      setErrorMessage(`Không thể chọn file: ${err.message}`);
+    }
+    const el = document.getElementById('global-audio-input') as HTMLInputElement;
+    if (el) {
+      el.click();
     }
   };
 
   // Drag-and-drop file support
   const handleFileDrop = (file: File) => {
-    const filePath = (file as any).path;
+    let filePath = '';
+    if (window.electronAPI?.getPathForFile) {
+      try {
+        filePath = window.electronAPI.getPathForFile(file);
+      } catch {
+        filePath = (file as any).path || '';
+      }
+    } else {
+      filePath = (file as any).path || '';
+    }
+
     if (filePath) {
       const fileUrl = `local-audio://${encodeURIComponent(filePath)}`;
       handleLoadFile(filePath, file.name, fileUrl, file.size);
@@ -481,6 +498,19 @@ export const App: React.FC = () => {
           if (window.electronAPI) {
             const status = await window.electronAPI.checkEngine();
             setEngineStatus(status);
+          }
+        }}
+      />
+
+      <input
+        type="file"
+        id="global-audio-input"
+        accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aac"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleFileDrop(e.target.files[0]);
+            e.target.value = '';
           }
         }}
       />

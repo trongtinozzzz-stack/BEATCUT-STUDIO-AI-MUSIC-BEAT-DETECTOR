@@ -64,11 +64,17 @@ function createWindow() {
     iconPath = path.resolve(__dirname, '..', 'build', 'icon.ico');
   }
 
-  // Tìm đường dẫn preload script
-  let preloadPath = path.join(__dirname, 'preload.js');
-  if (!fs.existsSync(preloadPath)) {
-    preloadPath = path.join(app.getAppPath(), 'dist-electron', 'preload.js');
-  }
+  // Tìm đường dẫn preload script an toàn
+  const candidatePreloads = [
+    path.join(__dirname, 'preload.cjs'),
+    path.join(__dirname, 'preload.js'),
+    path.join(__dirname, 'preload.mjs'),
+    path.join(app.getAppPath(), 'dist-electron', 'preload.cjs'),
+    path.join(app.getAppPath(), 'dist-electron', 'preload.js'),
+    path.join(process.resourcesPath, 'app.asar', 'dist-electron', 'preload.cjs'),
+    path.join(process.resourcesPath, 'app.asar', 'dist-electron', 'preload.js'),
+  ];
+  let preloadPath = candidatePreloads.find((p) => fs.existsSync(p)) || path.join(__dirname, 'preload.cjs');
 
   mainWindow = new BrowserWindow({
     width: 1360,

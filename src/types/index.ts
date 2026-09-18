@@ -71,6 +71,7 @@ declare global {
       openProject: () => Promise<{ success: boolean; data?: ProjectData; filePath?: string; error?: string }>;
       exportData: (format: 'json' | 'csv' | 'txt', content: string, defaultName: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
       checkEngine: () => Promise<EngineStatus>;
+      getPathForFile?: (file: File) => string;
       onProgress: (callback: (progress: ProgressEvent) => void) => () => void;
     };
   }

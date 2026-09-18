@@ -38,6 +38,11 @@ export default defineConfig(({ command }) => {
             build: {
               outDir: 'dist-electron',
               rollupOptions: {
+                output: {
+                  format: 'cjs',
+                  entryFileNames: 'preload.cjs',
+                  inlineDynamicImports: true,
+                },
                 external: ['electron'],
               },
             },
