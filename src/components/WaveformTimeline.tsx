@@ -7,7 +7,9 @@ import {
   Trash2, 
   SlidersHorizontal,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { BeatMarker } from '../types';
 import { formatTime, formatTimeShort } from '../utils/time';
@@ -48,6 +50,37 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
   const [isDraggingPlayhead, setIsDraggingPlayhead] = useState<boolean>(false);
   const [hoveredMarker, setHoveredMarker] = useState<BeatMarker | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+
+  // Filter toggle states: Nhịp mạnh, Nhịp nhẹ/chuẩn, Marker thủ công, Ẩn tất cả
+  const [showStrong, setShowStrong] = useState<boolean>(true);
+  const [showStandard, setShowStandard] = useState<boolean>(true);
+  const [showManual, setShowManual] = useState<boolean>(true);
+  const [isHideAll, setIsHideAll] = useState<boolean>(false);
+
+  // Tính toán danh sách marker thực tế được hiển thị trên timeline
+  const visibleMarkers = useMemo(() => {
+    if (isHideAll) return [];
+    return markers.filter((m) => {
+      if (m.source === 'manual' || m.type === 'custom') {
+        return showManual;
+      }
+      if (m.type === 'strong_beat') {
+        return showStrong;
+      }
+      return showStandard;
+    });
+  }, [markers, isHideAll, showStrong, showStandard, showManual]);
+
+  const handleToggleHideAll = () => {
+    if (isHideAll) {
+      setIsHideAll(false);
+      setShowStrong(true);
+      setShowStandard(true);
+      setShowManual(true);
+    } else {
+      setIsHideAll(true);
+    }
+  };
 
   // Keep playhead in view when playing
   useEffect(() => {
@@ -199,9 +232,9 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
       ctx.stroke();
     }
 
-    // 4. Draw Beat Markers
-    if (duration > 0 && markers) {
-      markers.forEach((marker) => {
+    // 4. Draw Beat Markers (theo danh sách đã lọc visibleMarkers)
+    if (duration > 0 && visibleMarkers) {
+      visibleMarkers.forEach((marker) => {
         const x = (marker.time / duration) * width;
         const isSelected = selectedMarkerId === marker.id;
 
@@ -221,7 +254,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
 
         // Vertical guide line
         ctx.strokeStyle = isSelected ? '#ffffff' : markerColor;
-        ctx.lineWidth = isSelected ? 2 : 1.2;
+        ctx.lineWidth = isSelected ? 2 : (marker.type === 'strong_beat' ? 1.5 : 1.0);
         ctx.setLineDash(marker.source === 'manual' ? [4, 2] : []);
         ctx.beginPath();
         ctx.moveTo(x, rulerHeight);
@@ -230,8 +263,8 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
         ctx.setLineDash([]);
 
         // Marker flag handle on ruler
-        const flagWidth = isSelected ? 12 : 8;
-        const flagHeight = isSelected ? 14 : 10;
+        const flagWidth = isSelected ? 12 : (marker.type === 'strong_beat' ? 10 : 8);
+        const flagHeight = isSelected ? 14 : (marker.type === 'strong_beat' ? 12 : 10);
         ctx.fillStyle = isSelected ? '#ffffff' : flagColor;
         ctx.beginPath();
         ctx.moveTo(x - flagWidth / 2, rulerHeight - flagHeight);
@@ -277,7 +310,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
       ctx.closePath();
       ctx.fill();
     }
-  }, [waveform, duration, currentTime, markers, selectedMarkerId, zoom]);
+  }, [waveform, duration, currentTime, visibleMarkers, selectedMarkerId, zoom]);
 
   // Click handler: click on canvas to seek or select marker
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -286,10 +319,10 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
     const clickX = e.clientX - rect.left + containerRef.current.scrollLeft;
     const clickedTime = pxToTime(clickX);
 
-    // Check if clicked near a marker (threshold: 7px)
+    // Check if clicked near a marker (threshold: 8px)
     const thresholdPx = 8;
     let foundMarker: BeatMarker | null = null;
-    for (const m of markers) {
+    for (const m of visibleMarkers) {
       const mPx = timeToPx(m.time);
       if (Math.abs(mPx - clickX) <= thresholdPx) {
         foundMarker = m;
@@ -318,7 +351,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
     // Check hover marker for tooltip
     const thresholdPx = 8;
     let foundMarker: BeatMarker | null = null;
-    for (const m of markers) {
+    for (const m of visibleMarkers) {
       const mPx = timeToPx(m.time);
       if (Math.abs(mPx - currentX) <= thresholdPx) {
         foundMarker = m;
@@ -347,6 +380,11 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
       onDeleteMarker(selectedMarkerId);
     }
   };
+
+  // Zoom handlers
+  const handleZoomIn = () => setZoom((prev) => Math.min(10.0, Number((prev + 0.5).toFixed(1))));
+  const handleZoomOut = () => setZoom((prev) => Math.max(1.0, Number((prev - 0.5).toFixed(1))));
+  const handleResetZoom = () => setZoom(1.0);
 
   // Beat Density description and label
   const densityTier = useMemo(() => {
@@ -390,7 +428,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
               {densityTier.label}
             </span>
             <span className="text-xs font-mono bg-studio-card px-2 py-0.5 rounded border border-studio-border text-slate-300">
-              {markers.length} nhịp
+              {visibleMarkers.length} nhịp
             </span>
           </div>
         </div>
@@ -420,31 +458,31 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
           <div className="h-4 w-px bg-studio-border mx-1" />
 
           <button
-            onClick={() => setZoom((z) => Math.max(1.0, Number((z - 0.5).toFixed(1))))}
+            onClick={handleZoomOut}
             disabled={zoom <= 1.0}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-studio-card disabled:opacity-30 rounded-lg transition"
+            className="p-1 text-slate-400 hover:text-white disabled:opacity-30 rounded hover:bg-studio-card transition"
             title="Thu nhỏ timeline"
           >
-            <ZoomOut className="w-3.5 h-3.5" />
+            <ZoomOut className="w-4 h-4" />
           </button>
 
-          <span className="text-[11px] font-mono text-slate-400 min-w-[32px] text-center">
+          <span className="text-xs font-mono text-slate-400 min-w-[28px] text-center">
             {zoom}x
           </span>
 
           <button
-            onClick={() => setZoom((z) => Math.min(8.0, Number((z + 0.5).toFixed(1))))}
-            disabled={zoom >= 8.0}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-studio-card disabled:opacity-30 rounded-lg transition"
+            onClick={handleZoomIn}
+            disabled={zoom >= 10.0}
+            className="p-1 text-slate-400 hover:text-white disabled:opacity-30 rounded hover:bg-studio-card transition"
             title="Phóng to timeline"
           >
-            <ZoomIn className="w-3.5 h-3.5" />
+            <ZoomIn className="w-4 h-4" />
           </button>
 
           <button
-            onClick={() => setZoom(1.0)}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-studio-card rounded-lg transition"
-            title="Đặt lại mức zoom (1.0x)"
+            onClick={handleResetZoom}
+            className="p-1 text-slate-400 hover:text-white rounded hover:bg-studio-card transition ml-1"
+            title="Đặt lại mức hiển thị toàn bộ bài hát"
           >
             <Maximize2 className="w-3.5 h-3.5" />
           </button>
@@ -484,12 +522,12 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
               />
               <span>
                 {hoveredMarker.type === 'strong_beat'
-                  ? 'Nhịp mạnh (Strong Beat)'
+                  ? 'Nhịp mạnh (Phách 1 - Bar)'
                   : hoveredMarker.type === 'custom'
                   ? 'Thủ công (Custom)'
                   : hoveredMarker.type === 'transition'
-                  ? 'Chuyển đoạn (Transition)'
-                  : 'Nhịp chuẩn (Beat)'}
+                  ? 'Nhịp phụ (Upbeat 1/8)'
+                  : 'Nhịp chuẩn (Quarter Note)'}
               </span>
             </div>
             <div className="text-[11px] text-slate-300 font-mono">
@@ -497,28 +535,95 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             </div>
             <div className="text-[10px] text-slate-400">
               Độ mạnh: {Math.round(hoveredMarker.strength * 100)}% | Nguồn:{' '}
-              {hoveredMarker.source === 'auto' ? 'AI Librosa' : 'Người dùng'}
+              {hoveredMarker.source === 'auto' ? 'AI DSP' : 'Người dùng'}
             </div>
           </div>
         )}
       </div>
 
-      {/* Legend & Guide Bar */}
-      <div className="h-7 bg-studio-card border-t border-studio-border px-4 flex items-center justify-between text-[11px] text-slate-400 select-none shrink-0">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Nhịp mạnh
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" /> Nhịp chuẩn
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" /> Marker thủ công
-          </span>
+      {/* Legend & Guide Bar with Interactive Toggle Filters */}
+      <div className="h-8 bg-studio-card border-t border-studio-border px-4 flex items-center justify-between text-[11px] text-slate-400 select-none shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase font-bold text-slate-500 mr-1">Hiển thị:</span>
+
+          {/* Toggle 1: Nhịp mạnh */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowStrong(!showStrong);
+              setIsHideAll(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition cursor-pointer ${
+              showStrong && !isHideAll
+                ? 'bg-red-500/15 border-red-500/40 text-red-300 hover:bg-red-500/25'
+                : 'bg-studio-surface border-studio-border/60 text-slate-500 line-through opacity-50 hover:opacity-80'
+            }`}
+            title="Nhấp để Ẩn / Hiện nhịp mạnh (Phách 1 đầu khuôn nhạc)"
+          >
+            <span className={`w-2 h-2 rounded-full ${showStrong && !isHideAll ? 'bg-red-500 shadow-sm shadow-red-500/50' : 'bg-slate-600'}`} />
+            <span>Nhịp mạnh</span>
+          </button>
+
+          {/* Toggle 2: Nhịp nhẹ / chuẩn */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowStandard(!showStandard);
+              setIsHideAll(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition cursor-pointer ${
+              showStandard && !isHideAll
+                ? 'bg-yellow-500/15 border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/25'
+                : 'bg-studio-surface border-studio-border/60 text-slate-500 line-through opacity-50 hover:opacity-80'
+            }`}
+            title="Nhấp để Ẩn / Hiện nhịp chuẩn / nhịp nhẹ"
+          >
+            <span className={`w-2 h-2 rounded-full ${showStandard && !isHideAll ? 'bg-yellow-400 shadow-sm shadow-yellow-400/50' : 'bg-slate-600'}`} />
+            <span>Nhịp nhẹ / chuẩn</span>
+          </button>
+
+          {/* Toggle 3: Marker thủ công */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowManual(!showManual);
+              setIsHideAll(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition cursor-pointer ${
+              showManual && !isHideAll
+                ? 'bg-purple-500/15 border-purple-500/40 text-purple-300 hover:bg-purple-500/25'
+                : 'bg-studio-surface border-studio-border/60 text-slate-500 line-through opacity-50 hover:opacity-80'
+            }`}
+            title="Nhấp để Ẩn / Hiện các marker bạn thêm thủ công"
+          >
+            <span className={`w-2 h-2 rounded-full ${showManual && !isHideAll ? 'bg-purple-500 shadow-sm shadow-purple-500/50' : 'bg-slate-600'}`} />
+            <span>Marker thủ công</span>
+          </button>
+
+          <div className="h-3.5 w-px bg-studio-border mx-1" />
+
+          {/* Toggle 4: Ẩn hết / Hiện tất cả */}
+          <button
+            type="button"
+            onClick={handleToggleHideAll}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition cursor-pointer ${
+              isHideAll
+                ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 hover:bg-amber-500/30'
+                : 'bg-studio-surface hover:bg-studio-hover border-studio-border text-slate-300 hover:text-white'
+            }`}
+            title={isHideAll ? 'Hiện lại tất cả các điểm nhịp' : 'Ẩn toàn bộ điểm nhịp trên timeline'}
+          >
+            {isHideAll ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
+            <span>{isHideAll ? 'Hiện tất cả' : 'Ẩn hết'}</span>
+          </button>
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Shortcuts Guide */}
+        <div className="flex items-center gap-3 text-slate-500 text-[11px]">
           <span>Phím cách: Phát/Dừng</span>
+          <span>•</span>
           <span>Phím M: Đánh dấu</span>
+          <span>•</span>
           <span>Phím Delete: Xóa marker</span>
         </div>
       </div>
