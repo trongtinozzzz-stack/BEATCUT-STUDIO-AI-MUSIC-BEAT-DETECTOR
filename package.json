@@ -45,6 +45,9 @@
       "python_runtime/**/*"
     ],
     "win": {
+      "icon": "build/icon.ico",
+      "sign": null,
+      "signAndEditExecutable": false,
       "target": [
         {
           "target": "dir",
