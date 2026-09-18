@@ -199,7 +199,7 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
   // 3. Adaptive Moving Average Thresholding (Ngưỡng động thích ứng theo vùng)
   // Cửa sổ 70 khung (±350ms)
   const winRadius = 35;
-  const onsets: { time: number; strength: number; isKick: boolean }[] = [];
+  const onsets: { time: number; strength: number; lowEnergy: number }[] = [];
   const minIntervalFrames = Math.floor(0.20 / 0.01); // Khoảng cách tối thiểu giữa 2 nhịp là 0.20s (max 300 BPM)
 
   let lastOnsetFrame = -minIntervalFrames;
@@ -237,13 +237,13 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
 
     if (val > threshold && (i - lastOnsetFrame >= minIntervalFrames)) {
       const onsetTime = Number((i * 0.01).toFixed(3));
-      const isKick = lowFlux[i] >= bandFlux[i] * 1.2 && lowFlux[i] > maxFlux * 0.15;
+      const lowEnergyVal = lowFlux[i];
       const normalizedStrength = Math.min(1.0, val / maxFlux);
 
       onsets.push({
         time: onsetTime,
         strength: normalizedStrength,
-        isKick,
+        lowEnergy: lowEnergyVal,
       });
 
       lastOnsetFrame = i;
@@ -271,22 +271,35 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     }
   }
 
-  // 5. Tạo danh sách Marker theo đúng vị trí đập thực tế của âm thanh
+  // 5. Xác định ngưỡng Bass cực mạnh (Top 18% năng lượng trầm cao nhất cả bài)
+  const lowEnergyList = onsets.map((o) => o.lowEnergy).sort((a, b) => a - b);
+  const p82Index = Math.floor(lowEnergyList.length * 0.82);
+  const heavyBassThreshold = lowEnergyList.length > 0 ? lowEnergyList[p82Index] : 0.5;
+
+  // 6. Tạo danh sách Marker: Chỉ các cú Bass mạnh mới gán là Nhịp mạnh (🔴), còn lại là Nhịp chuẩn (🟡)
   const generatedBeats: BeatMarker[] = [];
-  let barCount = 1;
+  let lastStrongTime = -999;
+  let dropCount = 1;
 
   onsets.forEach((onset, idx) => {
-    // Đánh dấu Nhịp mạnh (🔴) cho các cú Bass/Kick đập lớn hoặc nhịp đầu khuôn
-    const isStrong = onset.isKick || (idx % 4 === 0 && onset.strength > 0.5);
+    // Điều kiện nhịp mạnh: Năng lượng bass vượt ngưỡng Top 18% VÀ cách nhịp mạnh trước ít nhất 1.0 giây
+    const isHeavyBass = onset.lowEnergy >= heavyBassThreshold && onset.lowEnergy > maxFlux * 0.25;
+    const isSpacedEnough = (onset.time - lastStrongTime) >= 0.95;
+    const isStrong = (isHeavyBass && isSpacedEnough) || (idx === 0 && onset.lowEnergy > heavyBassThreshold * 0.8);
+
+    if (isStrong) {
+      lastStrongTime = onset.time;
+    }
+
     const markerType: MarkerType = isStrong ? 'strong_beat' : 'beat';
 
     generatedBeats.push({
       id: `onset-${idx}-${onset.time}`,
       time: onset.time,
-      strength: isStrong ? 1.0 : Number(onset.strength.toFixed(2)),
+      strength: isStrong ? 1.0 : Number((onset.strength * 0.75 + 0.1).toFixed(2)),
       type: markerType,
       source: 'auto',
-      label: isStrong ? `Drop ${barCount++}` : undefined,
+      label: isStrong ? `Bass Drop ${dropCount++}` : undefined,
     });
   });
 
