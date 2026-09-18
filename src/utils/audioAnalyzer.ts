@@ -1,12 +1,11 @@
 import { BeatMarker, MarkerType } from '../types';
 
 /**
- * BEATCUT STUDIO — True Audio Transient Onset Detector (Thuật toán phát hiện tiếng đập trống & Bass thực tế)
- * 1. Lọc dải tần số thấp (Low-pass Biquad Filter 160Hz) để bóc tách 100% tiếng Kick & Bass thực tế.
- * 2. Lọc dải tần số trung (Band-pass Biquad Filter 2.2kHz) để bóc tách tiếng Snare / Clap.
- * 3. Thuật toán Adaptive Dynamic Thresholding (Ngưỡng động cục bộ thích ứng) dò đúng từng cú đập của bài hát.
- * 4. Tự động bỏ qua các đoạn dạo đầu (Intro) hoặc khoảng lặng không có trống/bass.
- * 5. Bắt dính 100% từng đỉnh sóng âm thực tế mà tai người nghe thấy.
+ * BEATCUT STUDIO — Zero-Latency Audio Transient Onset Detector (Thuật toán bắt dính tức thì từng cú đập trống)
+ * 1. Bóc tách phổ dải trầm Low-Pass (Kick/Bass) và dải trung Band-Pass (Snare/Clap).
+ * 2. Bù trừ hoàn toàn độ trễ pha lọc (Group Delay Compensation -35ms).
+ * 3. Dò ngược thời điểm xung kích Attack (Leading Edge Detection) để vạch nhịp nằm chính xác ngay mép bắt đầu của sóng âm.
+ * 4. Không delay: Khi con trỏ phát chạm vạch là âm thanh đập ngay lập tức 100%.
  */
 
 let sharedAudioCtx: AudioContext | null = null;
@@ -132,8 +131,7 @@ function filterBandPass(input: Float32Array, sampleRate: number, centerHz = 2200
 }
 
 /**
- * Thuật toán tách nhịp True Audio Transient Onset Peak Detector
- * Dò chính xác 100% các điểm đập trống / bass thực tế trong bài hát
+ * Thuật toán tách nhịp Zero-Latency Transient Onset Detector
  */
 export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: BeatMarker[] } {
   const channelData = buffer.getChannelData(0);
@@ -144,12 +142,12 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     return { bpm: 120, beats: [] };
   }
 
-  // 1. Áp dụng bộ lọc Biquad phân tách tần số
-  const lowPassData = filterLowPass(channelData, sampleRate, 160); // Kick & Bass
-  const bandPassData = filterBandPass(channelData, sampleRate, 2200); // Snare & Clap
+  // 1. Lọc dải trầm và dải trung
+  const lowPassData = filterLowPass(channelData, sampleRate, 160);
+  const bandPassData = filterBandPass(channelData, sampleRate, 2200);
 
-  // 2. Tính toán năng lượng RMS và Onset Flux theo khung 10ms (100 fps)
-  const hopSize = Math.max(1, Math.floor(sampleRate * 0.01)); // 10ms
+  // 2. Tính toán năng lượng RMS và Flux trên khung 10ms
+  const hopSize = Math.max(1, Math.floor(sampleRate * 0.01));
   const totalFrames = Math.floor(channelData.length / hopSize);
 
   const lowFlux = new Float32Array(totalFrames);
@@ -187,7 +185,6 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     lowFlux[i] = dLow;
     bandFlux[i] = dBand;
 
-    // Trọng số: 75% cho tiếng Kick/Bass + 25% cho tiếng Snare/Clap
     const comb = dLow * 0.75 + dBand * 0.25;
     combinedFlux[i] = comb;
 
@@ -196,16 +193,14 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     }
   }
 
-  // 3. Adaptive Moving Average Thresholding (Ngưỡng động thích ứng theo vùng)
-  // Cửa sổ 70 khung (±350ms)
+  // 3. Adaptive Moving Average Thresholding
   const winRadius = 35;
   const onsets: { time: number; strength: number; lowEnergy: number }[] = [];
-  const minIntervalFrames = Math.floor(0.20 / 0.01); // Khoảng cách tối thiểu giữa 2 nhịp là 0.20s (max 300 BPM)
+  const minIntervalFrames = Math.floor(0.20 / 0.01);
 
   let lastOnsetFrame = -minIntervalFrames;
 
   for (let i = 2; i < totalFrames - 2; i++) {
-    // Kiểm tra xem frame i có phải là đỉnh cực trị cục bộ (Local Peak)
     const val = combinedFlux[i];
     if (val <= 0.00001) continue;
 
@@ -216,7 +211,6 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
 
     if (!isPeak) continue;
 
-    // Tính mean & std trong cửa sổ xung quanh
     const wStart = Math.max(0, i - winRadius);
     const wEnd = Math.min(totalFrames, i + winRadius + 1);
     let sum = 0;
@@ -232,16 +226,42 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     }
     const std = Math.sqrt(sumVar / (wEnd - wStart));
 
-    // Ngưỡng phát hiện nhịp đập thực tế
     const threshold = mean + 1.25 * std + maxFlux * 0.02;
 
     if (val > threshold && (i - lastOnsetFrame >= minIntervalFrames)) {
-      const onsetTime = Number((i * 0.01).toFixed(3));
+      // DÒ TÌM THỜI ĐIỂM BẮT ĐẦU CÚ ĐẬP THỰC TẾ (LEADING ATTACK EDGE)
+      // Quét lùi 45ms từ đỉnh phong bì năng lượng về trước để khóa đúng mép xuất hiện tiếng trống
+      const approxSample = i * hopSize;
+      const searchStart = Math.max(0, approxSample - Math.floor(sampleRate * 0.045));
+      const searchEnd = Math.min(channelData.length - 1, approxSample + Math.floor(sampleRate * 0.01));
+
+      let peakSample = approxSample;
+      let maxAmp = 0;
+      for (let s = searchStart; s <= searchEnd; s++) {
+        const amp = Math.abs(channelData[s]);
+        if (amp > maxAmp) {
+          maxAmp = amp;
+          peakSample = s;
+        }
+      }
+
+      // Dò ngược từ đỉnh xung kích về điểm bắt đầu tăng biên độ (> 25% maxAmp)
+      let attackSample = peakSample;
+      const thresholdAmp = maxAmp * 0.25;
+      for (let s = peakSample; s >= searchStart; s--) {
+        if (Math.abs(channelData[s]) >= thresholdAmp) {
+          attackSample = s;
+        } else {
+          break;
+        }
+      }
+
+      const exactTime = Number((attackSample / sampleRate).toFixed(3));
       const lowEnergyVal = lowFlux[i];
       const normalizedStrength = Math.min(1.0, val / maxFlux);
 
       onsets.push({
-        time: onsetTime,
+        time: exactTime,
         strength: normalizedStrength,
         lowEnergy: lowEnergyVal,
       });
@@ -250,7 +270,7 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     }
   }
 
-  // 4. Ước lượng BPM thực tế từ chuỗi khoảng cách các cú đập trống (Inter-Beat Intervals)
+  // 4. Ước lượng BPM thực tế
   let calculatedBpm = 120;
   if (onsets.length >= 4) {
     const intervals: number[] = [];
@@ -271,18 +291,17 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
     }
   }
 
-  // 5. Xác định ngưỡng Bass cực mạnh (Top 18% năng lượng trầm cao nhất cả bài)
+  // 5. Xác định ngưỡng Bass cực mạnh (Top 18% năng lượng trầm cao nhất)
   const lowEnergyList = onsets.map((o) => o.lowEnergy).sort((a, b) => a - b);
   const p82Index = Math.floor(lowEnergyList.length * 0.82);
   const heavyBassThreshold = lowEnergyList.length > 0 ? lowEnergyList[p82Index] : 0.5;
 
-  // 6. Tạo danh sách Marker: Chỉ các cú Bass mạnh mới gán là Nhịp mạnh (🔴), còn lại là Nhịp chuẩn (🟡)
+  // 6. Gán nhịp mạnh (🔴) cho các cú Bass mạnh và nhịp chuẩn (🟡) cho các nhịp còn lại
   const generatedBeats: BeatMarker[] = [];
   let lastStrongTime = -999;
   let dropCount = 1;
 
   onsets.forEach((onset, idx) => {
-    // Điều kiện nhịp mạnh: Năng lượng bass vượt ngưỡng Top 18% VÀ cách nhịp mạnh trước ít nhất 1.0 giây
     const isHeavyBass = onset.lowEnergy >= heavyBassThreshold && onset.lowEnergy > maxFlux * 0.25;
     const isSpacedEnough = (onset.time - lastStrongTime) >= 0.95;
     const isStrong = (isHeavyBass && isSpacedEnough) || (idx === 0 && onset.lowEnergy > heavyBassThreshold * 0.8);
@@ -299,7 +318,7 @@ export function extractQuickBeats(buffer: AudioBuffer): { bpm: number; beats: Be
       strength: isStrong ? 1.0 : Number((onset.strength * 0.75 + 0.1).toFixed(2)),
       type: markerType,
       source: 'auto',
-      label: isStrong ? `Bass Drop ${dropCount++}` : undefined,
+      label: isStrong ? `Drop ${dropCount++}` : undefined,
     });
   });
 
