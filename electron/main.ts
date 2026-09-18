@@ -14,57 +14,95 @@ let currentPythonProcess: ChildProcess | null = null;
 
 // Xác định đường dẫn Python executable
 function getPythonExecutable(): string {
-  // 1. Kiểm tra Python runtime tích hợp cục bộ trong workspace
+  // 1. Kiểm tra Python trong thư mục resources khi đóng gói (Production)
+  const prodPython = path.join(process.resourcesPath, 'python_runtime', 'python.exe');
+  if (fs.existsSync(prodPython)) {
+    return prodPython;
+  }
+  // 2. Kiểm tra Python trong thư mục chứa file .exe
+  const exeDirPython = path.join(path.dirname(app.getPath('exe')), 'resources', 'python_runtime', 'python.exe');
+  if (fs.existsSync(exeDirPython)) {
+    return exeDirPython;
+  }
+  // 3. Kiểm tra Python runtime tích hợp cục bộ trong workspace
   const localPython = path.join(app.getAppPath(), 'python_runtime', 'python.exe');
   if (fs.existsSync(localPython)) {
     return localPython;
   }
-  // 2. Kiểm tra nếu đang chạy ở development mode trong thư mục gốc
+  // 4. Kiểm tra nếu đang chạy ở development mode trong thư mục gốc
   const devLocalPython = path.resolve(__dirname, '..', 'python_runtime', 'python.exe');
   if (fs.existsSync(devLocalPython)) {
     return devLocalPython;
   }
-  // 3. Fallback hệ thống
+  // 5. Fallback hệ thống
   return 'python';
 }
 
 function getScriptPath(): string {
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-  if (isDev) {
-    return path.resolve(__dirname, '..', 'python', 'beat_detector.py');
+  const prodScript = path.join(process.resourcesPath, 'python', 'beat_detector.py');
+  if (fs.existsSync(prodScript)) {
+    return prodScript;
   }
-  return path.join(process.resourcesPath, 'python', 'beat_detector.py');
+  const exeDirScript = path.join(path.dirname(app.getPath('exe')), 'resources', 'python', 'beat_detector.py');
+  if (fs.existsSync(exeDirScript)) {
+    return exeDirScript;
+  }
+  const devScript = path.resolve(__dirname, '..', 'python', 'beat_detector.py');
+  if (fs.existsSync(devScript)) {
+    return devScript;
+  }
+  return path.join(app.getAppPath(), 'python', 'beat_detector.py');
 }
 
 function createWindow() {
+  // Tìm đường dẫn icon an toàn
+  let iconPath = path.join(app.getAppPath(), 'build', 'icon.ico');
+  if (!fs.existsSync(iconPath)) {
+    iconPath = path.join(process.resourcesPath, 'build', 'icon.ico');
+  }
+  if (!fs.existsSync(iconPath)) {
+    iconPath = path.resolve(__dirname, '..', 'build', 'icon.ico');
+  }
+
+  // Tìm đường dẫn preload script
+  let preloadPath = path.join(__dirname, 'preload.js');
+  if (!fs.existsSync(preloadPath)) {
+    preloadPath = path.join(app.getAppPath(), 'dist-electron', 'preload.js');
+  }
+
   mainWindow = new BrowserWindow({
     width: 1360,
     height: 860,
     minWidth: 1024,
     minHeight: 650,
     backgroundColor: '#0c0d12',
-    icon: path.join(__dirname, '../build/icon.ico'),
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     title: 'BEATCUT STUDIO — AI Music Beat Detector',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: true,
+      webSecurity: false,
     },
     autoHideMenuBar: true,
-    show: false,
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+    show: true,
   });
 
   // Load URL
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const prodIndex = path.join(app.getAppPath(), 'dist', 'index.html');
+    if (fs.existsSync(prodIndex)) {
+      mainWindow.loadFile(prodIndex);
+    } else {
+      mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    }
   }
+
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('Failed to load page:', errorCode, errorDescription, validatedURL);
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;

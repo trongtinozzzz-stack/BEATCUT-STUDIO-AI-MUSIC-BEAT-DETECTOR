@@ -40,9 +40,19 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*",
-      "python/**/*",
-      "python_runtime/**/*"
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "python_runtime",
+        "to": "python_runtime",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "python",
+        "to": "python",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "icon": "build/icon.ico",
