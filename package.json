@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "description": "AI Music Beat Detector & Timeline Studio",
-  "main": "dist-electron/main.js",
+  "main": "server.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder --dir",
+    "build": "vite build",
+    "build:web": "vite build",
+    "build:electron": "tsc && vite build && electron-builder --dir",
     "dist": "tsc && vite build && electron-builder",
+    "start": "node server.js",
     "preview": "vite preview"
   },
   "dependencies": {
