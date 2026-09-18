@@ -110,44 +110,49 @@ def analyze_audio(file_path: str):
             return
 
         send_progress(45, "Đang tính toán phong bì tín hiệu nhịp (Onset Strength)...")
-        # Tính toán onset strength envelope
-        onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+        # Tính toán onset strength envelope tập trung vào dải tần nhịp trống
+        onset_env = librosa.onset.onset_strength(y=y, sr=sr, aggregate=np.median, fmax=8000)
 
         send_progress(65, "Đang dò tìm nhịp và ước lượng BPM...")
-        # Dò nhịp và ước lượng tempo
-        tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr, onset_envelope=onset_env)
+        # Dò nhịp và ước lượng tempo với tightness ổn định
+        tempo, beat_frames = librosa.beat.beat_track(
+            y=y, 
+            sr=sr, 
+            onset_envelope=onset_env,
+            tightness=100,
+            trim=False
+        )
         bpm = float(np.atleast_1d(tempo)[0])
 
         # Chuyển beat frames sang giây (timestamps)
         beat_times = librosa.frames_to_time(beat_frames, sr=sr)
 
-        send_progress(80, "Đang đánh giá độ mạnh từng phách nhịp...")
-        # Tính độ mạnh (strength) tại các vị trí beat từ onset envelope
-        max_frame = len(onset_env) - 1
-        valid_frames = [min(f, max_frame) for f in beat_frames]
-
-        strengths = []
-        if len(valid_frames) > 0:
-            raw_strengths = onset_env[valid_frames]
-            max_val = float(np.max(raw_strengths)) if len(raw_strengths) > 0 and np.max(raw_strengths) > 0 else 1.0
-            norm_strengths = (raw_strengths / max_val).tolist()
-            strengths = [round(float(s), 3) for s in norm_strengths]
-        else:
-            strengths = [0.5] * len(beat_times)
-
-        # Phân loại beat mạnh (strong beat) dựa trên phân vị 70%
-        p70 = float(np.percentile(strengths, 70)) if len(strengths) > 0 else 0.5
-
+        send_progress(80, "Đang căn chỉnh lưới nhịp và phân loại phách âm nhạc...")
+        
+        # Tạo danh sách beat hoàn chỉnh có cấu trúc nhạc lý (4/4 Bar Downbeats, Quarter Notes, 1/8 Subdivisions)
         beats_data = []
         for i, t in enumerate(beat_times):
-            s = strengths[i] if i < len(strengths) else 0.5
-            is_strong = s >= p70
+            is_bar_downbeat = (i % 4 == 0) # Phách 1 của mỗi Bar 4/4
+            b_time = round(float(t), 3)
+            
+            # Phách chính (Quarter Note)
             beats_data.append({
-                "time": round(float(t), 3),
-                "strength": s,
-                "type": "strong_beat" if is_strong else "beat",
+                "time": b_time,
+                "strength": 1.0 if is_bar_downbeat else 0.75,
+                "type": "strong_beat" if is_bar_downbeat else "beat",
                 "source": "auto"
             })
+
+            # Phách phụ 1/8 (Upbeat / Half-beat)
+            if i < len(beat_times) - 1:
+                next_t = float(beat_times[i + 1])
+                half_t = round((float(t) + next_t) / 2.0, 3)
+                beats_data.append({
+                    "time": half_t,
+                    "strength": 0.35,
+                    "type": "transition",
+                    "source": "auto"
+                })
 
         send_progress(90, "Đang tạo dữ liệu dạng sóng (Waveform)...")
         # Sinh 1500 điểm waveform downsampled cho Canvas hiển thị siêu nhẹ

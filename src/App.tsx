@@ -61,34 +61,29 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // Filtered Markers based on Beat Density (CHỨC NĂNG CỐT LÕI)
+  // Filtered Markers based on Beat Density (CHỨC NĂNG CỐT LÕI NHƯ CAPCUT)
   const activeMarkers = useMemo(() => {
-    // 1. Phân loại theo mật độ tách nhịp (Beat Density: 0 -> 100)
-    // - Low (0 -> 33): Chỉ lấy các beat mạnh nhất (top percentile)
-    // - Medium (34 -> 66): Lấy các beat tiêu chuẩn và cân bằng
-    // - High (67 -> 100): Lấy toàn bộ các beat đã phát hiện được
+    // Phân loại theo mật độ tách nhịp:
+    // - Low (0 -> 33): Chỉ lấy các phách 1 đầu khuôn nhạc (Bar Downbeats - Vàng)
+    // - Medium (34 -> 66): Lấy toàn bộ phách chính 1/4 nhịp (Quarter notes 1, 2, 3, 4 - Đỏ & Vàng)
+    // - High (67 -> 100): Lấy thêm cả phách phụ 1/8 (Upbeats / Subdivisions - Cyan)
     let filteredAuto: BeatMarker[] = [];
 
     if (allDetectedBeats.length > 0) {
-      if (beatDensity >= 95) {
-        // High max: hiển thị toàn bộ
-        filteredAuto = allDetectedBeats;
+      if (beatDensity <= 33) {
+        filteredAuto = allDetectedBeats.filter((b) => b.type === 'strong_beat');
+      } else if (beatDensity <= 66) {
+        filteredAuto = allDetectedBeats.filter((b) => b.type === 'strong_beat' || b.type === 'beat');
       } else {
-        // Ngưỡng lọc dựa trên strength: từ 0.8 (low) xuống 0.0 (high)
-        const threshold = Math.max(0, (100 - beatDensity) / 100 * 0.85);
-        filteredAuto = allDetectedBeats.filter((b) => {
-          if (b.type === 'strong_beat') return true; // Luôn giữ nhịp mạnh
-          return b.strength >= threshold;
-        });
+        filteredAuto = allDetectedBeats;
+      }
 
-        // Nếu mật độ quá thấp khiến quá ít beat, đảm bảo giữ lại ít nhất các nhịp chính
-        if (filteredAuto.length === 0) {
-          filteredAuto = allDetectedBeats.slice(0, Math.max(1, Math.floor(allDetectedBeats.length * 0.2)));
-        }
+      if (filteredAuto.length === 0) {
+        filteredAuto = allDetectedBeats.filter((b) => b.type === 'strong_beat' || b.type === 'beat');
       }
     }
 
-    // Kết hợp với các marker thủ công người dùng đã thêm
+    // Kết hợp với các marker thủ công người dùng đã thêm (custom - Tím)
     const combined = [...filteredAuto, ...manualMarkers];
     combined.sort((a, b) => a.time - b.time);
     return combined;
